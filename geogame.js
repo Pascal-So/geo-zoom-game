@@ -68,26 +68,30 @@ function getMaxZoomLevel(lat, lng, callback){
     });
 }
 
-function generate_map_uri(lat,lng,zoom){
+function generate_map_uri(lat,lng,zoom,type){
 	//https://maps.googleapis.com/maps/api/staticmap?center=0,0&zoom=3&size=640x640&maptype=satellite
 
 	var coord_string = coords_to_string(lat,lng);
 	var zoom_string = zoom.toString();
 
 	var uri = "https://maps.googleapis.com/maps/api/staticmap?center=" + coord_string
-			+ "&zoom=" + zoom_string + "&size=640x640&maptype=satellite&key=AIzaSyBQ1VzOXpmdii0cZvx-4l5qex9Y-L8tUjY";
+			+ "&zoom=" + zoom_string + "&size=640x640&maptype=" + type + "&key=AIzaSyBQ1VzOXpmdii0cZvx-4l5qex9Y-L8tUjY";
 
 	return uri;
 }
 
-function update_map(lat,lng,zoom){
+function update_map(lat,lng,zoom,type){
 	var map = document.getElementById("map");
 
-	var uri = generate_map_uri(lat,lng,zoom);
+	var uri = generate_map_uri(lat,lng,zoom,type);
 
 	console.log(uri);
 
 	map.src = uri;
+}
+
+function show_solution(){
+	update_map(g_lat, g_lng, g_zoom, "hybrid");
 }
 
 function zoom_out(){
@@ -99,7 +103,7 @@ function zoom_out(){
 			// double the zoom out speed if zoom > 7
 			g_zoom --;
 		}
-		update_map(g_lat, g_lng, g_zoom);
+		update_map(g_lat, g_lng, g_zoom, "satellite");
 	}
 }
 
