@@ -2,6 +2,7 @@ var g_lat;
 var g_lng;
 var g_zoom;
 
+
 function random_in_range(start, end){
 	var diff = end-start;
 	return Math.random()*diff + start;
@@ -41,8 +42,8 @@ function getCoordinates(attempts_left, callback){
 			if (xhr.status == 200) {
 	        	var response = JSON.parse(xhr.responseText);
 		        if(response.status == "ZERO_RESULTS"){
-		        	getCoordinates(attempts_left-1, callback);
 		        	console.log("Generated coordinates were in ocean");
+		        	getCoordinates(attempts_left-1, callback);
 		        }else{
 		        	callback(lat, lng);
 		        }
@@ -94,12 +95,26 @@ function zoom_out(){
 
 	if(g_zoom > min_zoom){
 		g_zoom --;
+		if(g_zoom > 7){
+			// double the zoom out speed if zoom > 7
+			g_zoom --;
+		}
 		update_map(g_lat, g_lng, g_zoom);
 	}
 }
 
+function show_coords(){
+	var coord_string = coords_to_string(lat,lng);
+
+	var coords_field = document.getElementById("coords_field");
+
+	coords_field.innerHTML = coord_string;
+}
+
 function start_game(){
-	console.log("Start game called");
+	var coords_field = document.getElementById("coords_field");
+	coords_field.innerHTML = "";
+
 	getCoordinates(10, function(lat, lng){
 		g_lat = lat;
 		g_lng = lng;

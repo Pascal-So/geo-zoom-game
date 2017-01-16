@@ -4,7 +4,7 @@ body{
 	margin: 0;
 	padding: 0;
 	padding-bottom: 60px;
-	padding-top: 10px;
+	padding-top: 1px;
 	position: relative;
 	font-family: monospace, mono;
 	background-color: #272727;
@@ -29,7 +29,7 @@ footer{
 	right: 0;
 	left: 0;
 	bottom: 0;
-	padding: 10px;
+	padding: 1px 10px;
 	background-color: #222;
 	color: #aaa;
 }
@@ -41,6 +41,7 @@ footer p{
 h1{
 	font-size: 50px;
 	font-weight: 100;
+	text-decoration: underline;
 }
 
 .button {
