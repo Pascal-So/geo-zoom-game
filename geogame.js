@@ -125,7 +125,7 @@ function start_game(){
 		getMaxZoomLevel(g_lat, g_lng, function(zoom){
 			g_zoom = zoom;
 
-			update_map(lat, lng, zoom);
+			update_map(lat, lng, zoom, "satellite");
 		})
 	});
 	
