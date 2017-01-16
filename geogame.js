@@ -1,6 +1,6 @@
-var lat;
-var lng;
-var zoom;
+var g_lat;
+var g_lng;
+var g_zoom;
 
 function random_in_range(start, end){
 	var diff = end-start;
@@ -10,18 +10,25 @@ function random_in_range(start, end){
 function coords_to_string(lat, lng){
 	var prec = 7;
 	
-	var lat_s = lat.toString.substr(0, prec);
-	var lng_s = lng.toString.substr(0, prec);
-	return lat_s + "," + long_s;
+	var lat_s = lat.toString().substr(0, prec);
+	var lng_s = lng.toString().substr(0, prec);
+	return lat_s + "," + lng_s;
 }
 
 
-function getCoordinates(callback){
+function getCoordinates(attempts_left, callback){
+
+	if(attempts_left <= 0){
+		alert("Too many failed attempts to get coordinates.");
+		return;
+	}
 
 	lat = random_in_range(-80, 80);
 	lng = random_in_range(-180, 180);
 
 	var coord_string = coords_to_string(lat, lng);
+
+	console.log("Generated coordinates", coord_string);
 
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + coord_string, true);
@@ -30,29 +37,78 @@ function getCoordinates(callback){
 	xhr.onreadystatechange = processRequest;
 	 
 	function processRequest(e) {
-		if (xhr.readyState == 4 && xhr.status == 200) {
-        	var response = JSON.parse(xhr.responseText);
-	        
-	    }else{
-	    	getCoordinates(callback);
-	    }
+		if(xhr.readyState == 4){
+			if (xhr.status == 200) {
+	        	var response = JSON.parse(xhr.responseText);
+		        if(response.status == "ZERO_RESULTS"){
+		        	getCoordinates(attempts_left-1, callback);
+		        	console.log("Generated coordinates were in ocean");
+		        }else{
+		        	callback(lat, lng);
+		        }
+		    }else{
+		    	// has returned, but not 400
+		    	console.log("getCoordinates failed xhr request");
+		    	getCoordinates(attempts_left-1, callback);
+		    }
+		}
 	}
 }
 
-function initialize(){
-
-	var xhr = new XMLHttpRequest();
-
+function getMaxZoomLevel(lat, lng, callback){
 	maxZoomService = new google.maps.MaxZoomService();
-
-	
 
 	maxZoomService.getMaxZoomAtLatLng({lat: lat, lng: lng}, function(response) {
     	if (response.status !== 'OK') {
     		alert("Error in Google's MaxZoomService");
     	} else {
-    		zoom = parseInt(response.zoom);
+    		callback(parseInt(response.zoom));
     	}
     });
+}
+
+function generate_map_uri(lat,lng,zoom){
+	//https://maps.googleapis.com/maps/api/staticmap?center=0,0&zoom=3&size=640x640&maptype=satellite
+
+	var coord_string = coords_to_string(lat,lng);
+	var zoom_string = zoom.toString();
+
+	var uri = "https://maps.googleapis.com/maps/api/staticmap?center=" + coord_string
+			+ "&zoom=" + zoom_string + "&size=640x640&maptype=satellite";
+
+	return uri;
+}
+
+function update_map(lat,lng,zoom){
+	var map = document.getElementById("map");
+
+	var uri = generate_map_uri(lat,lng,zoom);
+
+	console.log(uri);
+
+	map.src = uri;
+}
+
+function zoom_out(){
+	var min_zoom = 3;
+
+	if(g_zoom > min_zoom){
+		g_zoom --;
+		update_map(g_lat, g_lng, g_zoom);
+	}
+}
+
+function start_game(){
+	console.log("Start game called");
+	getCoordinates(10, function(lat, lng){
+		g_lat = lat;
+		g_lng = lng;
+		getMaxZoomLevel(g_lat, g_lng, function(zoom){
+			g_zoom = zoom;
+
+			update_map(lat, lng, zoom);
+		})
+	});
+	
 
 }

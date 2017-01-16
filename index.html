@@ -6,24 +6,26 @@
 	<meta charset="UTF-8">
 	<script type="text/javascript" src="geogame.js"></script>
 	<script async defer
-    src="https://maps.googleapis.com/maps/api/js?callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?callback=start_game">
     </script>
-
+    <link rel="stylesheet" type="text/css" href="geogame.css">
 </head>
 <body>
 
 <h1>Geo Game</h1>
+<div class="content">
+	<p class="align-left">The map starts out at a random location, at the maximum available zoom level. 
+	You can zoom out to see how long it takes you to guess, what place you're looking at.</p>
+	<!-- <img src="https://maps.googleapis.com/maps/api/staticmap?center=0,0&zoom=3&size=640x640&maptype=satellite" id="map"> -->
+	<img src="error.png" id="map">
 
-<img src="https://maps.googleapis.com/maps/api/staticmap?center=0,0&zoom=3&size=640x640&maptype=satellite">
+	<br>
 
-	<!-- https://maps.googleapis.com/maps/api/geocode/json?latlng=45.6714224,140.6961452 -->
-
-	<!-- https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=3&size=640x640&maptype=satellite -->
-
-<br>
-<br>
-
-<div>Zoom out</div>
-
+	<div class="button" onclick="zoom_out()">Zoom out</div>
+	<div class="button" onclick="start_game()">Restart</div>
+</div>
+<footer class="align-right">
+	<p>Pascal Sommer, 2017 - <a href="http://twitter.com/sommerpascal">@SommerPascal</a></p>
+</footer>
 </body>
 </html>
