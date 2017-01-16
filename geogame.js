@@ -95,7 +95,7 @@ function show_solution(){
 }
 
 function zoom_out(){
-	var min_zoom = 3;
+	var min_zoom = 2;
 
 	if(g_zoom > min_zoom){
 		g_zoom --;
