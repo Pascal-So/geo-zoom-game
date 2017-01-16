@@ -12,6 +12,10 @@ body{
 	min-height: 100vh;
 }
 
+#map{
+	width: 100%;
+}
+
 .content{
 	max-width: 640px;
 	margin: auto;
@@ -47,8 +51,8 @@ h1{
 .button {
 	background-color: #181818;
 	text-align: center;
-	margin: 20px auto;
-	width: 140px;
+	margin: 5px auto;
+	width: 130px;
 	padding: 10px;
 	display: inline-block;
 }
