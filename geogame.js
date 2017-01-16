@@ -75,7 +75,7 @@ function generate_map_uri(lat,lng,zoom){
 	var zoom_string = zoom.toString();
 
 	var uri = "https://maps.googleapis.com/maps/api/staticmap?center=" + coord_string
-			+ "&zoom=" + zoom_string + "&size=640x640&maptype=satellite";
+			+ "&zoom=" + zoom_string + "&size=640x640&maptype=satellite&key=AIzaSyBQ1VzOXpmdii0cZvx-4l5qex9Y-L8tUjY";
 
 	return uri;
 }
