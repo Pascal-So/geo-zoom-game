@@ -16,6 +16,19 @@ function coords_to_string(lat, lng){
 	return lat_s + "," + lng_s;
 }
 
+// http://mathworld.wolfram.com/SpherePointPicking.html
+function uniformRandomCoordinates(){
+    var lower = -0.866025403; // cut south at -60 deg
+    var upper = 0.994522; // cut north at 84 deg
+
+    var lat = (-Math.acos(random_in_range(lower, upper)) + Math.PI/2) * 180 / Math.PI;
+    var lng = random_in_range(-180, 180);
+
+    return {
+        lat: lat,
+        lng: lng,
+    };
+}
 
 function getCoordinates(attempts_left, callback){
 
@@ -24,10 +37,8 @@ function getCoordinates(attempts_left, callback){
 		return;
 	}
 
-	lat = random_in_range(-80, 80);
-	lng = random_in_range(-180, 180);
-
-	var coord_string = coords_to_string(lat, lng);
+    var coords = uniformRandomCoordinates();
+	var coord_string = coords_to_string(coords.lat, coords.lng);
 
 	console.log("Generated coordinates", coord_string);
 
@@ -45,7 +56,7 @@ function getCoordinates(attempts_left, callback){
 		        	console.log("Generated coordinates were in ocean");
 		        	getCoordinates(attempts_left-1, callback);
 		        }else{
-		        	callback(lat, lng);
+		        	callback(coords.lat, coords.lng);
 		        }
 		    }else{
 		    	// has returned, but not 400
@@ -108,7 +119,7 @@ function zoom_out(){
 }
 
 function show_coords(){
-	var coord_string = coords_to_string(lat,lng);
+	var coord_string = coords_to_string(g_lat,g_lng);
 
 	var coords_field = document.getElementById("coords_field");
 
