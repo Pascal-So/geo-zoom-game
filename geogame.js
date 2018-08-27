@@ -138,11 +138,14 @@ function start_game(){
 	coords_field.innerHTML = "";
 
 	getCoordinates(10, function(lat, lng){
+		g_lat = lat;
+		g_lng = lng;
 		getMaxZoomLevel(lat, lng, function(zoom){
+			g_zoom = zoom;
 			var url = 'logger.php';
 			logString(coords_to_string(lat, lng) + " - " + zoom.toString(), url);
 
 			update_map(lat, lng, zoom, "satellite");
-		});
+		})
 	});
 }
