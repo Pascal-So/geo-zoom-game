@@ -18,16 +18,16 @@ function coords_to_string(lat, lng){
 
 // http://mathworld.wolfram.com/SpherePointPicking.html
 function uniformRandomCoordinates(){
-    var lower = -0.866025403; // cut south at -60 deg
-    var upper = 0.994522; // cut north at 84 deg
+	var lower = -0.866025403; // cut south at -60 deg
+	var upper = 0.994522; // cut north at 84 deg
 
-    var lat = (-Math.acos(random_in_range(lower, upper)) + Math.PI/2) * 180 / Math.PI;
-    var lng = random_in_range(-180, 180);
+	var lat = (-Math.acos(random_in_range(lower, upper)) + Math.PI/2) * 180 / Math.PI;
+	var lng = random_in_range(-180, 180);
 
-    return {
-        lat: lat,
-        lng: lng,
-    };
+	return {
+		lat: lat,
+		lng: lng,
+	};
 }
 
 function getCoordinates(attempts_left, callback){
@@ -37,7 +37,7 @@ function getCoordinates(attempts_left, callback){
 		return;
 	}
 
-    var coords = uniformRandomCoordinates();
+	var coords = uniformRandomCoordinates();
 	var coord_string = coords_to_string(coords.lat, coords.lng);
 
 	console.log("Generated coordinates", coord_string);
@@ -51,18 +51,18 @@ function getCoordinates(attempts_left, callback){
 	function processRequest(e) {
 		if(xhr.readyState == 4){
 			if (xhr.status == 200) {
-	        	var response = JSON.parse(xhr.responseText);
-		        if(response.status == "ZERO_RESULTS"){
-		        	console.log("Generated coordinates were in ocean");
-		        	getCoordinates(attempts_left-1, callback);
-		        }else{
-		        	callback(coords.lat, coords.lng);
-		        }
-		    }else{
-		    	// has returned, but not 400
-		    	console.log("getCoordinates failed xhr request");
-		    	getCoordinates(attempts_left-1, callback);
-		    }
+				var response = JSON.parse(xhr.responseText);
+				if(response.status == "ZERO_RESULTS"){
+					console.log("Generated coordinates were in ocean");
+					getCoordinates(attempts_left-1, callback);
+				}else{
+					callback(coords.lat, coords.lng);
+				}
+			}else{
+				// has returned, but not 400
+				console.log("getCoordinates failed xhr request");
+				getCoordinates(attempts_left-1, callback);
+			}
 		}
 	}
 }
@@ -71,12 +71,12 @@ function getMaxZoomLevel(lat, lng, callback){
 	maxZoomService = new google.maps.MaxZoomService();
 
 	maxZoomService.getMaxZoomAtLatLng({lat: lat, lng: lng}, function(response) {
-    	if (response.status !== 'OK') {
-    		alert("Error in Google's MaxZoomService");
-    	} else {
-    		callback(parseInt(response.zoom));
-    	}
-    });
+		if (response.status !== 'OK') {
+			alert("Error in Google's MaxZoomService");
+		} else {
+			callback(parseInt(response.zoom));
+		}
+	});
 }
 
 function generate_map_uri(lat,lng,zoom,type){
@@ -126,19 +126,23 @@ function show_coords(){
 	coords_field.innerHTML = coord_string;
 }
 
+function logString(str, url) {
+	url += "?coords=" + str;
+	fetch(encodeURI(url), {
+		method: 'GET',
+	});
+}
+
 function start_game(){
 	var coords_field = document.getElementById("coords_field");
 	coords_field.innerHTML = "";
 
 	getCoordinates(10, function(lat, lng){
-		g_lat = lat;
-		g_lng = lng;
-		getMaxZoomLevel(g_lat, g_lng, function(zoom){
-			g_zoom = zoom;
+		getMaxZoomLevel(lat, lng, function(zoom){
+			var url = 'logger.php';
+			logString(coords_to_string(lat, lng) + " - " + zoom.toString(), url);
 
 			update_map(lat, lng, zoom, "satellite");
-		})
+		});
 	});
-	
-
 }
