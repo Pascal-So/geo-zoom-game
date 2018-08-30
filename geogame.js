@@ -1,6 +1,10 @@
+// global variables
 var g_lat;
 var g_lng;
 var g_zoom;
+var g_counter = 0;
+
+var logger_url = 'logger.php';
 
 
 function random_in_range(start, end){
@@ -127,13 +131,19 @@ function show_coords(){
 }
 
 function logString(str, url) {
-	url += "?coords=" + str;
+	if (typeof(window.fetch) == "undefined") {
+		console.log("fetch not supported by this browser.");
+		return;
+	}
+
+	url += "?data=" + str;
 	fetch(encodeURI(url), {
 		method: 'GET',
 	});
 }
 
 function start_game(){
+	++g_counter;
 	var coords_field = document.getElementById("coords_field");
 	coords_field.innerHTML = "";
 
@@ -142,8 +152,10 @@ function start_game(){
 		g_lng = lng;
 		getMaxZoomLevel(lat, lng, function(zoom){
 			g_zoom = zoom;
-			var url = 'logger.php';
-			logString(coords_to_string(lat, lng) + " - " + zoom.toString(), url);
+			var logged_string = coords_to_string(lat, lng) + "," +
+								g_zoom.toString() + "," +
+								g_counter.toString();
+			logString(logged_string, logger_url);
 
 			update_map(lat, lng, zoom, "satellite");
 		})
