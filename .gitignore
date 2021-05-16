@@ -1,1 +1,4 @@
 generated_coordinates.log
+node_modules
+dist
+src/vars.ts
