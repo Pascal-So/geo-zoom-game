@@ -21,9 +21,7 @@ async function getMaxZoomLevel(coords: Coords): Promise<number> {
 
     const response = await maxZoomService.getMaxZoomAtLatLng(coords);
 
-    // When used in the async form, getMaxZoomLevel always
-    // returns a promise.
-    return response!.zoom;
+    return response?.zoom || 1;
 }
 
 export async function generateUniform(): Promise<View> {

@@ -34,6 +34,11 @@ class App extends React.Component<AppProps, AppState> {
         this.showMapLabels = this.showMapLabels.bind(this);
     }
 
+    componentDidMount() {
+        console.log('mounted');
+        this.newGame();
+    }
+
     async newGame() {
         const view = await generateUniform();
 
