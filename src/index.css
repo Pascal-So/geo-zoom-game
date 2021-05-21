@@ -12,7 +12,7 @@ body{
 	min-height: 100vh;
 }
 
-#map{
+.map{
 	width: 100%;
 }
 

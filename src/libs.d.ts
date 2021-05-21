@@ -17,6 +17,6 @@ declare module 'formatcoords' {
     function init({ lat, lng }: { lat: number; lng: number }): Formatcoords
 
     export default init
-};
+}
 
 declare module 'google.maps';
