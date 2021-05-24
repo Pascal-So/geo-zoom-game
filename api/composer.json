@@ -1,0 +1,8 @@
+{
+    "name": "pascal-so/geo-zoom-game-api",
+    "type": "project",
+    "require": {
+        "gasparesganga/php-shapefile": "^3.4",
+        "leafs/leaf": "^2.4"
+    }
+}
