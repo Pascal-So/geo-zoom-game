@@ -49,4 +49,10 @@ $app->get('/play-map/{map}', function($map) use($app) {
     $app->response()->json($geometry->getArray());
 });
 
+$app->get('/licenses', function() use($app) {
+    $app->response()->json([
+        'text' => file_get_contents(DATA_DIR . '/licenses.txt')
+    ]);
+});
+
 $app->run();

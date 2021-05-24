@@ -1,0 +1,8 @@
+[package]
+name = "geodist"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+gdal = "0.8"
+rand = "0.8"
