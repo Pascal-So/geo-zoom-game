@@ -3,28 +3,22 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { Loader } from "@googlemaps/js-api-loader";
-import { apiKey } from './vars';
-
-// type State = {
-//     zoom: number,
-//     counter: number,
-// };
-
-// async function logState(state: State) {
-//     const url = `logger.php?data=coords,${state.zoom},${state.counter}`;
-//     await fetch(encodeURI(url));
-// }
+import { apiKey, geoApiUrl, mockGoogle } from './vars';
 
 async function main() {
     const loader = new Loader({
         apiKey,
         version: 'beta',
     });
-    await loader.load();
+
+    const [, availableMaps] = await Promise.all([
+        mockGoogle ? null : loader.load(),
+        fetch(`${geoApiUrl}/available-maps`).then(r => r.json())
+    ]);
 
     ReactDOM.render(
         <React.StrictMode>
-            <App />
+            <App availableMaps={availableMaps} />
         </React.StrictMode>,
 
         document.getElementById('root')

@@ -1,4 +1,5 @@
 import { View, ViewType, Coords } from './common';
+import { geoApiUrl, mockGoogle } from './vars';
 
 function randomInRange(start: number, end: number): number {
     const diff = end - start;
@@ -17,6 +18,10 @@ function uniformRandomCoordinates(): Coords {
 }
 
 async function getMaxZoomLevel(coords: Coords): Promise<number> {
+    if (mockGoogle) {
+        return 10;
+    }
+
     const maxZoomService = new google.maps.MaxZoomService();
 
     const response = await maxZoomService.getMaxZoomAtLatLng(coords);
@@ -24,8 +29,25 @@ async function getMaxZoomLevel(coords: Coords): Promise<number> {
     return response?.zoom || 1;
 }
 
-export async function generateUniform(): Promise<View> {
-    const coords = uniformRandomCoordinates();
+async function fetchCoords(map: string): Promise<Coords> {
+    const {x, y} = await fetch(`${geoApiUrl}/play-map/${map}`)
+        .then(r => r.json());
+
+    return {
+        lat: y,
+        lng: x
+    };
+}
+
+export async function generate(map: string): Promise<View> {
+    let coords;
+
+    if (map === 'random') {
+        coords = uniformRandomCoordinates();
+    } else {
+        coords = await fetchCoords(map);
+    }
+
     const zoom = await getMaxZoomLevel(coords);
     return {
         coords,

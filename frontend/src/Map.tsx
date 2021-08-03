@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ApiKey, GameStatus, serializeCoords } from './common';
 import mapError from './MapError.png';
 import mapLoading from './MapLoading.png';
+import { mockGoogle } from './vars';
 
 export type MapProps = {
     status: GameStatus,
@@ -10,6 +11,10 @@ export type MapProps = {
 };
 
 function generateMapURL(view: View, apiKey: ApiKey) {
+    if (mockGoogle) {
+        return mapLoading;
+    }
+
     return `https://maps.googleapis.com/maps/api/staticmap?center=${serializeCoords(view.coords)}` +
         `&zoom=${view.zoom}&size=640x640&maptype=${view.type}&key=${apiKey}`;
 }

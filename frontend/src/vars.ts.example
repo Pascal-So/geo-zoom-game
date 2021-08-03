@@ -1,3 +1,7 @@
 import { ApiKey } from './common';
 
 export const apiKey: ApiKey = '';
+
+export const geoApiUrl = '/api';
+
+export const mockGoogle = false;
