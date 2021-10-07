@@ -1,14 +1,6 @@
-export type Coords = {
-    lat: number,
-    lng: number,
-};
-
-export function serializeCoords({lat, lng}: Coords): string {
-    const prec = 7;
-    const lat_s = lat.toString().substr(0, prec);
-    const lng_s = lng.toString().substr(0, prec);
-    return `${lat_s},${lng_s}`;
-}
+import update from 'immutability-helper';
+import { Coords, toGoogleFormat } from './coords';
+import mapLoading from './img/MapLoading.png';
 
 export enum ViewType {
     Hybrid = 'hybrid',
@@ -21,10 +13,49 @@ export type View = {
     type: ViewType,
 };
 
-export type ApiKey = string;
-
-export enum GameStatus {
-    Loading,
-    Loaded,
-    Error,
+export type GameState = {
+    currentView: View,
+    maxZoom: number,
+    loadedImages: ImgUrlDict,
+    showingCoords: boolean,
+    lastImg?: string,
 };
+
+export type GoogleConfig = {
+    apiKey: string,
+    mockGoogle: boolean,
+};
+
+/**
+ * Undefined `url` means the image is still loading.
+ */
+export type ImgUrl = {url?: string};
+
+/**
+ * Dict from zoom level and view type to the object url for the google maps image.
+ */
+export type ImgUrlDict = { [zoom: number]: { [viewType in ViewType]?: ImgUrl } };
+
+type DictKey = Pick<View, 'zoom' | 'type'>;
+
+export function imgUrlDictGet(dict: ImgUrlDict, view: DictKey): ImgUrl | undefined {
+    return dict[view.zoom]?.[view.type];
+}
+
+export function imgUrlDictSet(dict: ImgUrlDict, view: DictKey, url: ImgUrl): ImgUrlDict {
+    return update(dict, {[view.zoom]: typedict => update(typedict || {}, {[view.type]: {$set: url}})});
+}
+
+export async function fetchView(view: View, conf: GoogleConfig): Promise<string> {
+    if (conf.mockGoogle) {
+        return new Promise(resolve => {
+            window.setTimeout(() => resolve(mapLoading), 500);
+        });
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/staticmap?center=${toGoogleFormat(view.coords)}` +
+    `&zoom=${view.zoom}&size=640x640&maptype=${view.type}&key=${conf.apiKey}`;
+
+    const response = await fetch(url);
+    return URL.createObjectURL(await response.blob());
+}

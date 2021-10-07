@@ -1,5 +1,7 @@
-import { View, ViewType, Coords } from './common';
-import { geoApiUrl, mockGoogle } from './vars';
+import { View, ViewType } from './common';
+import { Coords } from './coords';
+import { geoApiUrl, googleConfig } from './vars';
+
 
 function randomInRange(start: number, end: number): number {
     const diff = end - start;
@@ -18,7 +20,7 @@ function uniformRandomCoordinates(): Coords {
 }
 
 async function getMaxZoomLevel(coords: Coords): Promise<number> {
-    if (mockGoogle) {
+    if (googleConfig.mockGoogle) {
         return 10;
     }
 
@@ -29,8 +31,8 @@ async function getMaxZoomLevel(coords: Coords): Promise<number> {
     return response?.zoom || 1;
 }
 
-async function fetchCoords(map: string): Promise<Coords> {
-    const {x, y} = await fetch(`${geoApiUrl}/play-map/${map}`)
+async function fetchCoords(spawnMap: string): Promise<Coords> {
+    const {x, y} = await fetch(`${geoApiUrl}/play-map/${spawnMap}`)
         .then(r => r.json());
 
     return {
@@ -39,19 +41,22 @@ async function fetchCoords(map: string): Promise<Coords> {
     };
 }
 
-export async function generate(map: string): Promise<View> {
+export async function generate(spawnMap: string): Promise<[View, number]> {
     let coords;
 
-    if (map === 'random') {
+    if (spawnMap === 'random') {
         coords = uniformRandomCoordinates();
     } else {
-        coords = await fetchCoords(map);
+        coords = await fetchCoords(spawnMap);
     }
 
     const zoom = await getMaxZoomLevel(coords);
-    return {
-        coords,
+    return [
+        {
+            coords,
+            zoom,
+            type: ViewType.Satellite,
+        },
         zoom,
-        type: ViewType.Satellite,
-    };
+    ];
 }

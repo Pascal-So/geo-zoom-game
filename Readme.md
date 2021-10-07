@@ -8,7 +8,7 @@ to spend a couple of minutes and to discover various places.
 cd frontend
 yarn install
 yarn tsc
-yarn build
+PUBLIC_URL="." yarn build
 cd ..
 
 cd api

@@ -1,7 +1,8 @@
-import { ApiKey } from './common';
-
-export const apiKey: ApiKey = '';
+import { GoogleConfig } from './common';
 
 export const geoApiUrl = '/api';
 
-export const mockGoogle = false;
+export const googleConfig: GoogleConfig = {
+    apiKey: '',
+    mockGoogle: false,
+};

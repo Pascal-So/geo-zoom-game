@@ -1,120 +1,154 @@
-import React from 'react';
-import Map from './Map';
-import CoordsDisplay from './CoordsDisplay';
+import React, { useEffect, useMemo, useState } from 'react';
+import { prettyPrint } from './coords';
 // import Dropdown, { Option } from 'react-dropdown';
-import { View, ViewType, GameStatus } from './common';
-import { apiKey } from './vars';
+import mapLoading from './img/MapLoading.png';
+import { ViewType, imgUrlDictGet, fetchView, imgUrlDictSet, GameState } from './common';
+import { googleConfig } from './vars';
 import { generate } from './generate';
 import update from 'immutability-helper';
 
-type AppState = {
-    view: View,
-    showingCoords: boolean,
-    status: GameStatus,
-    selectedMap: string
-};
-
 type AppProps = {
-    availableMaps: string[],
+    availableSpawnMaps: string[],
 };
 
-class App extends React.Component<AppProps, AppState> {
-    constructor(props: AppProps) {
-        super(props);
+const App: React.FC<AppProps> = ({availableSpawnMaps}) => {
+    const [selectedSpawnMap, setSelectedSpawnMap] = useState(availableSpawnMaps[0]);
+    const [round, setRound] = useState<GameState | undefined>(undefined);
+    const [lastImage, setLastImage] = useState(mapLoading);
 
-        this.state = {
-            view: {
-                coords: {lat: 0, lng: 0},
-                zoom: 1,
-                type: ViewType.Satellite,
-            },
+    const newRound = async () => {
+        setRound(undefined);
+
+        const [currentView, maxZoom] = await generate(selectedSpawnMap);
+
+        setRound({
+            currentView,
+            maxZoom,
+            loadedImages: {},
             showingCoords: false,
-            status: GameStatus.Loading,
-            selectedMap: props.availableMaps[0],
-        };
-
-        this.newGame = this.newGame.bind(this);
-        this.zoomOut = this.zoomOut.bind(this);
-        this.showCoords = this.showCoords.bind(this);
-        this.showMapLabels = this.showMapLabels.bind(this);
-        this.onMapSelect = this.onMapSelect.bind(this);
-    }
-
-    componentDidMount() {
-        console.log('mounted');
-        this.newGame();
-    }
-
-    async newGame() {
-        const view = await generate(this.state.selectedMap);
-
-        this.setState({
-            view,
-            showingCoords: false,
-            status: GameStatus.Loaded,
-            selectedMap: this.state.selectedMap,
         });
-    }
+    };
 
-    zoomOut() {
-        const minZoom = 2;
+    const changeSelectedSpawnMap = (ev: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedSpawnMap(ev.target.value);
+        newRound();
+    };
 
-        this.setState(state => {
-            let newZoom = state.view.zoom;
+    const toggleCoordinates = () => {
+        setRound(r => {
+            if (!r) return undefined;
 
-            if(newZoom > minZoom){
-                newZoom --;
-                if(newZoom > 7){
-                    // double the zoom out speed if zoom > 7
-                    newZoom --;
-                }
-            }
-
-            return update(state, {view: {zoom: {$set: newZoom}}});
+            return update(r, {$toggle: ['showingCoords']});
         });
-    }
+    };
 
-    showCoords() {
-        this.setState(state => update(state, {$toggle: ['showingCoords']}));
-    }
+    const toggleViewType = () => {
+        setRound(r => {
+            if (!r) return undefined;
 
-    showMapLabels() {
-        this.setState(state => update(state, {view: {type: {$set: ViewType.Hybrid}}}));
-    }
+            switch (r.currentView.type) {
+                case ViewType.Hybrid:
+                    return update(r, {currentView: {type: {$set: ViewType.Satellite}}});
+                    case ViewType.Satellite:
+                        return update(r, {currentView: {type: {$set: ViewType.Hybrid}}});
+                    }
+                });
+            };
 
-    onMapSelect(event: React.ChangeEvent<HTMLSelectElement>) {
-        this.setState(state => update(state, {selectedMap: {$set: event.target.value}}), this.newGame.bind(this));
-    }
+            const zoomIn = () => {
+                setRound(r => {
+                    if (!r) return undefined;
 
-    render() {
-        return <div>
-            <p className="align-left">The map starts out at a random location at the maximum available zoom level.
-            You can zoom out to see how long it takes you to guess what place you're looking at.</p>
+                    const step = r.currentView.zoom >= 8 ? 2 : 1;
+                    const newZoom = Math.min(r.currentView.zoom + step, r.maxZoom);
 
-            <Map
-                status={this.state.status}
-                view={this.state.view}
-                apiKey={apiKey}
-            />
+                    return update(r, {currentView: {zoom: {$set: newZoom}}});
+                });
+            };
 
-            <br/>
+            const zoomOut = () => {
+                const minZoom = 2;
 
-            <div className="button" onClick={this.zoomOut}>Zoom out</div>
-            <div className="button" onClick={this.newGame}>Restart</div>
-            <div className="button" onClick={this.showCoords}>Coordinates</div>
-            <div className="button" onClick={this.showMapLabels}>Labels</div>
+                setRound(r => {
+            if (!r) return undefined;
 
-            { this.state.showingCoords ? <CoordsDisplay coords={this.state.view.coords}/> : <><br/><br/></> }
+            const step = r.currentView.zoom >= 10 ? 2 : 1;
+            const newZoom = Math.max(r.currentView.zoom - step, minZoom);
 
-            <select value={this.state.selectedMap} onChange={this.onMapSelect}>
-                { this.props.availableMaps.concat('random').map(m =>
-                    <option value={m} key={m}>{m}</option>
-                ) }
-            </select>
+            return update(r, {currentView: {zoom: {$set: newZoom}}});
+        });
+    };
 
-            <br/>
-        </div>;
-    }
-}
+    const loadImage = async () => {
+        if (!round) return;
+
+        const view = round.currentView;
+
+        // Has the loading of this entry already started?
+        if (imgUrlDictGet(round.loadedImages, view))
+            return;
+
+        setRound(r => {
+            if (!r) return undefined;
+            return update(r, {loadedImages: {$set: imgUrlDictSet(r.loadedImages, view, {})}});
+        });
+
+        const url = await fetchView(view, googleConfig);
+
+        setRound(r => {
+            if (!r) return undefined;
+            return update(r, {loadedImages: {$set: imgUrlDictSet(r.loadedImages, view, {url})}});
+        });
+    };
+
+    useEffect(() => {
+        loadImage();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [round?.currentView])
+
+    useEffect(() => {
+        // start first round
+        newRound();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const [imgSrc, ] = useMemo(() => {
+        const current = !!round
+            ? imgUrlDictGet(round.loadedImages, round.currentView)?.url
+            : undefined;
+
+        if (current) {
+            setLastImage(current);
+            return [current, false];
+        } else {
+            return [lastImage, true];
+        }
+    }, [round, lastImage]);
+
+    return <div>
+        <p className="align-left">The map starts out at a random location at the maximum available zoom level.
+        You can zoom out to see how long it takes you to guess what place you're looking at.</p>
+
+        <img className="map" src={imgSrc} alt="Satellite Imagery"/>
+
+        <br/>
+
+        <div className="button" onClick={zoomOut}>Zoom out</div>
+        <div className="button" onClick={zoomIn}>Zoom in</div>
+        <div className="button" onClick={newRound}>New Round</div>
+        <div className="button" onClick={toggleCoordinates}>Coordinates</div>
+        <div className="button" onClick={toggleViewType}>Labels</div>
+
+        { round?.showingCoords ? <p>{prettyPrint(round.currentView.coords)}</p> : <><br/><br/></> }
+
+        <select value={selectedSpawnMap} onChange={changeSelectedSpawnMap}>
+            { availableSpawnMaps.concat('random').map(m =>
+                <option value={m} key={m}>{m}</option>
+            ) }
+        </select>
+
+        <br/>
+    </div>;
+};
 
 export default App;

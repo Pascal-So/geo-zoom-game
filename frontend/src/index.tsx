@@ -3,22 +3,22 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { Loader } from "@googlemaps/js-api-loader";
-import { apiKey, geoApiUrl, mockGoogle } from './vars';
+import { googleConfig, geoApiUrl } from './vars';
 
 async function main() {
     const loader = new Loader({
-        apiKey,
+        apiKey: googleConfig.apiKey,
         version: 'beta',
     });
 
     const [, availableMaps] = await Promise.all([
-        mockGoogle ? null : loader.load(),
+        googleConfig.mockGoogle ? null : loader.load(),
         fetch(`${geoApiUrl}/available-maps`).then(r => r.json())
     ]);
 
     ReactDOM.render(
         <React.StrictMode>
-            <App availableMaps={availableMaps} />
+            <App availableSpawnMaps={availableMaps} />
         </React.StrictMode>,
 
         document.getElementById('root')
