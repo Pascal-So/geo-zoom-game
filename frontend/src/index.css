@@ -70,3 +70,28 @@ h1{
 .align-right{
 	text-align: right;
 }
+
+.coords-display {
+  display: inline-block;
+}
+.coords-display p {
+  margin: 0.3em 0 0 0;
+}
+
+.coords-icon {
+  position: relative;
+  left: -0.15em;
+}
+
+.coordinates-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.controls-section h2 {
+  font-weight: lighter;
+  margin: 0;
+  font-size: 1.6rem;
+  display: inline-block;
+}
