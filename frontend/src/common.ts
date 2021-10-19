@@ -2,10 +2,23 @@ import update from 'immutability-helper';
 import { Coords, toGoogleFormat } from './coords';
 import mapLoading from './img/MapLoading.png';
 
+import viewTypeHybridImage from './img/viewtype-hybrid.png';
+import viewTypeSatelliteImage from './img/viewtype-satellite.png';
+
+
 export enum ViewType {
     Hybrid = 'hybrid',
     Satellite = 'satellite',
 };
+
+export function viewTypeImage(vt: ViewType): string {
+    switch (vt) {
+        case ViewType.Hybrid:
+            return viewTypeHybridImage;
+        case ViewType.Satellite:
+            return viewTypeSatelliteImage;
+    }
+}
 
 export type View = {
     coords: Coords,
