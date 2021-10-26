@@ -1,9 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+import Play from './Play';
 import { Loader } from "@googlemaps/js-api-loader";
 import { googleConfig, geoApiUrl } from './vars';
+import MapSelector from './MapSelector';
+
+import mapGlobal from './img/map-global.png';
+import mapUrban from './img/map-urban.png';
+
+function App() {
+    const [spawnMap, setSpawnMap] = useState<string | undefined>(undefined);
+
+    if (spawnMap) {
+        return <Play
+            spawnMap={spawnMap}
+            selectNewSpawnMap={() => { setSpawnMap(undefined) }}
+        />;
+    } else {
+        return <MapSelector
+            selectMap={setSpawnMap}
+            availableMaps={[
+                {
+                    img: mapGlobal,
+                    map: 'global',
+                },
+                {
+                    img: mapUrban,
+                    map: 'urban',
+                },
+            ]}
+        />;
+    }
+}
 
 async function main() {
     const loader = new Loader({
@@ -18,7 +47,7 @@ async function main() {
 
     ReactDOM.render(
         <React.StrictMode>
-            <App availableSpawnMaps={availableMaps} />
+            <App />
         </React.StrictMode>,
 
         document.getElementById('root')

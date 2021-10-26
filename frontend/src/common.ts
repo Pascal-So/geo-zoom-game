@@ -1,6 +1,6 @@
 import update from 'immutability-helper';
 import { Coords, toGoogleFormat } from './coords';
-import mapLoading from './img/MapLoading.png';
+import mapBackground from './img/MapBackground.png';
 
 import viewTypeHybridImage from './img/viewtype-hybrid.png';
 import viewTypeSatelliteImage from './img/viewtype-satellite.png';
@@ -62,7 +62,7 @@ export function imgUrlDictSet(dict: ImgUrlDict, view: DictKey, url: ImgUrl): Img
 export async function fetchView(view: View, conf: GoogleConfig): Promise<string> {
     if (conf.mockGoogle) {
         return new Promise(resolve => {
-            window.setTimeout(() => resolve(mapLoading), 500);
+            window.setTimeout(() => resolve(mapBackground), 500);
         });
     }
 

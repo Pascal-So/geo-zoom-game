@@ -49,17 +49,21 @@ h1{
 }
 
 .button {
-	background-color: #181818;
+	border: 2px solid #666;
+	border-radius: 1px;
 	text-align: center;
 	margin: 5px;
-	width: 130px;
-	padding: 10px;
+	padding: 5px;
 	display: inline-block;
+}
+
+.button p {
+	margin: 0;
 }
 
 .button:hover{
 	cursor: pointer;
-	background-color: black;
+	background-color: #333;
 }
 
 
@@ -103,4 +107,28 @@ h1{
 
 .viewtype-selected {
   border: 3px solid #ccc;
+}
+
+
+.controls {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+}
+
+.map-option {
+	border-radius: 6px;
+	border: 1px solid #555;
+	margin: 8px;
+	display: inline-block;
+}
+
+.map-option p {
+	margin: 5px 0;
+}
+
+.map-option:hover {
+	background-color: #333;
+	cursor: pointer;
+	border-color: #777;
 }

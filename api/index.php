@@ -8,10 +8,11 @@ use Leaf\App;
 use Leaf\Router;
 use Shapefile\ShapefileReader;
 
-Router::setBasePath("/");
+Router::setBasePath("/api/");
 $app = new App([
     "log.dir" => LOG_DIR,
 ]);
+$app->response()->cors();
 
 $app->set404(function() use($app) {
     $app->response()->json([
