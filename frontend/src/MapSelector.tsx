@@ -21,16 +21,17 @@ function MapSelector({
         <br />
         <p>Select a map:</p>
         <div className="map-list">
-            { availableMaps.map(m => (
+            {availableMaps.map(m => (
                 <div
-                    className={ 'map-option' }
-                    onClick={ () => selectMap(m.map) } >
-                    <img src={ m.img }
-                        title={ m.map }
-                        key={ m.map } />
-                    <p>{ m.map }</p>
+                    className={'map-option'}
+                    key={m.map}
+                    onClick={() => selectMap(m.map)} >
+                    <img src={m.img}
+                        alt={`example location for map type ${m.map}`}
+                        title={m.map} />
+                    <p>{m.map}</p>
                 </div>
-            )) }
+            ))}
         </div>
     </div>;
 };

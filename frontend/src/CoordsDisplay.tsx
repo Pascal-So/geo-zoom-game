@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coords, prettyPrint, toGeoHackFormat } from './coords';
+import { Coords, prettyPrint, toGeoHackLink } from './coords';
 import RoomIcon from '@mui/icons-material/Room';
 
 type CoordsDisplayProps = {
@@ -14,11 +14,13 @@ const CoordsDisplay: React.FC<CoordsDisplayProps> = ({
     setShowingCoords,
 }) => {
     const lines = prettyPrint(coords);
-    const link = `https://geohack.toolforge.org/geohack.php?params=${toGeoHackFormat(coords)}`;
+    const link = toGeoHackLink(coords);
 
     const showCoordsClick = (e: React.MouseEvent<HTMLElement>) => {
-        e.preventDefault();
-        setShowingCoords(true);
+        if (!showingCoords) {
+            e.preventDefault();
+            setShowingCoords(true);
+        }
     }
 
     return <div className="coords-display controls-section">

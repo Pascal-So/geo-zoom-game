@@ -12,7 +12,7 @@ Router::setBasePath("/api/");
 $app = new App([
     "log.dir" => LOG_DIR,
 ]);
-$app->response()->cors();
+$app->cors();
 
 $app->set404(function() use($app) {
     $app->response()->json([

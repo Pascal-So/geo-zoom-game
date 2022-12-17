@@ -3,6 +3,8 @@
     "type": "project",
     "require": {
         "gasparesganga/php-shapefile": "^3.4",
-        "leafs/leaf": "^2.4"
+        "leafs/leaf": "^3.2",
+        "leafs/cors": "^1.1",
+        "leafs/cookie": "^1.1"
     }
 }

@@ -8,6 +8,7 @@ import MapIcon from '@mui/icons-material/Map';
 import RoomIcon from '@mui/icons-material/Room';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import CoordsDisplay from './CoordsDisplay';
 
 type PlayProps = {
     spawnMap: string,
@@ -22,14 +23,19 @@ function Play({ spawnMap, selectNewSpawnMap }: PlayProps) {
     const newRound = async () => {
         setRound(undefined);
 
-        const [currentView, maxZoom] = await generate(spawnMap);
+        try {
+            const [currentView, maxZoom] = await generate(spawnMap);
+            setRound({
+                currentView,
+                maxZoom,
+                loadedImages: {},
+                showingCoords: false,
+            });
 
-        setRound({
-            currentView,
-            maxZoom,
-            loadedImages: {},
-            showingCoords: false,
-        });
+        } catch (e) {
+            console.error(e);
+            // todo: set error state somewhere
+        }
     };
 
     const toggleCoordinates = () => {
@@ -141,6 +147,8 @@ function Play({ spawnMap, selectNewSpawnMap }: PlayProps) {
             </div>
             <div className="button" onClick={selectNewSpawnMap}>Change Map</div>
         </div>
+
+        <CoordsDisplay coords={round?.currentView.coords || {lat: 0, lng: 0}} showingCoords={round?.showingCoords || false} setShowingCoords={toggleCoordinates} />
 
         <br />
     </div>;

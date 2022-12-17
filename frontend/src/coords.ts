@@ -19,9 +19,10 @@ function toDMS({lat, lng}: Coords): [number, number, number, string, number, num
     return [latD, latM, latS, latL, lngD, lngM, lngS, lngL];
 }
 
-export function prettyPrint(coords: Coords): string {
+export function prettyPrint(coords: Coords): [string, string] {
     const [latD, latM, latS, latL, lngD, lngM, lngS, lngL] = toDMS(coords);
-    return `${latD}° ${latM}′ ${Math.floor(latS)}″ ${latL} ${lngD}° ${lngM}′ ${Math.floor(lngS)}″ ${lngL}`;
+    console.log(toDMS(coords))
+    return [`${latD}° ${latM}′ ${Math.floor(latS)}″ ${latL}`, `${lngD}° ${lngM}′ ${Math.floor(lngS)}″ ${lngL}`];
 }
 
 export function toGoogleFormat({lat, lng}: Coords): string {
@@ -31,7 +32,7 @@ export function toGoogleFormat({lat, lng}: Coords): string {
     return `${lat_s},${lng_s}`;
 }
 
-export function toGeoHackFormat(coords: Coords): string {
+export function toGeoHackLink(coords: Coords): string {
     const [latD, latM, latS, latL, lngD, lngM, lngS, lngL] = toDMS(coords);
-    return `${latD}_${latM}_${latS}_${latL}_${lngD}_${lngM}_${lngS}_${lngL}`;
+    return `https://geohack.toolforge.org/geohack.php?params=${latD}_${latM}_${latS}_${latL}_${lngD}_${lngM}_${lngS}_${lngL}`;
 }

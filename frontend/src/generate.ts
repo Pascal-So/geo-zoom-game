@@ -32,12 +32,21 @@ async function getMaxZoomLevel(coords: Coords): Promise<number> {
 }
 
 async function fetchCoords(spawnMap: string): Promise<Coords> {
-    const {x, y} = await fetch(`${geoApiUrl}/play-map/${spawnMap}`)
-        .then(r => r.json());
+    const res = await fetch(`${geoApiUrl}/play-map/${spawnMap}`);
+    if (!res.ok) {
+        const json = await res.json();
+        const reason = json?.reason || res.statusText;
+        throw `Could not fetch coordinates: ${reason}`;
+    }
+
+    const {x, y} = await res.json();
+    if (!x || !y) {
+        throw `Received invalid coordinate format from server.`
+    }
 
     return {
-        lat: y,
-        lng: x
+        lat: x,
+        lng: y
     };
 }
 
