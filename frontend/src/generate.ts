@@ -1,5 +1,5 @@
-import { View, ViewType } from './common';
 import { Coords } from './coords';
+import { View, ViewType } from './store';
 import { geoApiUrl, googleConfig } from './vars';
 
 
@@ -13,10 +13,10 @@ function uniformRandomCoordinates(): Coords {
     const lower = -0.866025403; // cut south at -60 deg
     const upper = 0.994522; // cut north at 84 deg
 
-    const lat = (-Math.acos(randomInRange(lower, upper)) + Math.PI/2) * 180 / Math.PI;
+    const lat = (-Math.acos(randomInRange(lower, upper)) + Math.PI / 2) * 180 / Math.PI;
     const lng = randomInRange(-180, 180);
 
-    return {lat, lng};
+    return { lat, lng };
 }
 
 async function getMaxZoomLevel(coords: Coords): Promise<number> {
@@ -39,24 +39,23 @@ async function fetchCoords(spawnMap: string): Promise<Coords> {
         throw `Could not fetch coordinates: ${reason}`;
     }
 
-    const {x, y} = await res.json();
+    const { x, y } = await res.json();
     if (!x || !y) {
         throw `Received invalid coordinate format from server.`
     }
 
-    return {
-        lat: x,
-        lng: y
-    };
+    return { lat: y, lng: x };
 }
 
 export async function generate(spawnMap: string): Promise<[View, number]> {
     let coords;
 
-    if (spawnMap === 'random') {
+    const spawnMapSlug = spawnMap.toLowerCase().replaceAll(' ', '');
+
+    if (spawnMapSlug === 'random') {
         coords = uniformRandomCoordinates();
     } else {
-        coords = await fetchCoords(spawnMap);
+        coords = await fetchCoords(spawnMapSlug);
     }
 
     const zoom = await getMaxZoomLevel(coords);
@@ -65,6 +64,7 @@ export async function generate(spawnMap: string): Promise<[View, number]> {
             coords,
             zoom,
             type: ViewType.Satellite,
+            spawnMap,
         },
         zoom,
     ];

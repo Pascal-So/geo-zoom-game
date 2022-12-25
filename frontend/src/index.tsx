@@ -1,57 +1,23 @@
-import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import Play from './Play';
 import { Loader } from "@googlemaps/js-api-loader";
-import { googleConfig, geoApiUrl } from './vars';
-import MapSelector from './MapSelector';
-
-import mapGlobal from './img/map-global.png';
-import mapUrban from './img/map-urban.png';
-
-function App() {
-    const [spawnMap, setSpawnMap] = useState<string | undefined>(undefined);
-
-    if (spawnMap) {
-        return <Play
-            spawnMap={spawnMap}
-            selectNewSpawnMap={() => { setSpawnMap(undefined) }}
-        />;
-    } else {
-        return <MapSelector
-            selectMap={setSpawnMap}
-            availableMaps={[
-                {
-                    img: mapGlobal,
-                    map: 'global',
-                },
-                {
-                    img: mapUrban,
-                    map: 'urban',
-                },
-            ]}
-        />;
-    }
-}
+import { googleConfig } from './vars';
+import { store } from './store';
+import { Provider } from 'react-redux';
 
 async function main() {
-    const loader = new Loader({
-        apiKey: googleConfig.apiKey,
-        version: 'beta',
-    });
+    if (!googleConfig.mockGoogle) {
+        await new Loader({
+            apiKey: googleConfig.apiKey,
+            version: 'beta', // todo: fix a version
+        }).load();
+    }
 
-    const [, availableMaps] = await Promise.all([
-        googleConfig.mockGoogle ? null : loader.load(),
-        fetch(`${geoApiUrl}/available-maps`).then(r => r.json())
-    ]);
-
-    ReactDOM.render(
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>,
-
-        document.getElementById('root')
-    );
+    const root = createRoot(document.getElementById('root')!);
+    root.render(<Provider store={store}>
+        <Play />
+    </Provider>);
 }
 
 main();

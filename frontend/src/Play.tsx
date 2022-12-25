@@ -1,157 +1,177 @@
-import { useEffect, useMemo, useState } from 'react';
-import mapLoading from './img/MapLoading.png';
-import { imgUrlDictGet, fetchView, imgUrlDictSet, GameState } from './common';
-import { googleConfig } from './vars';
+import { useCallback, useEffect, useState } from 'react';
 import { generate } from './generate';
-import update from 'immutability-helper';
-import MapIcon from '@mui/icons-material/Map';
-import RoomIcon from '@mui/icons-material/Room';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import CoordsDisplay from './CoordsDisplay';
+import { Button, Col, ConfigProvider, Layout, Popover, Row, Select, Space, Switch, theme, Timeline, Typography } from 'antd';
+import { CompassOutlined, GoogleOutlined, ReloadOutlined, ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
+import { Content, Footer } from 'antd/es/layout/layout';
+import { prettyPrint, toGeoHackLink, toGoogleMapsLink } from './coords';
+import { useDispatch, useSelector } from 'react-redux';
+import { finishRound, HistoryItem, replayRound, selectHistory, selectImgSrc, setNewRound, View } from './store';
+import * as store from './store';
 
-type PlayProps = {
-    spawnMap: string,
-    selectNewSpawnMap: () => void,
-};
+const firstSpawnMap = 'Urban';
 
-function Play({ spawnMap, selectNewSpawnMap }: PlayProps) {
-    const [round, setRound] = useState<GameState | undefined>(undefined);
-    const [lastImage, setLastImage] = useState(mapLoading);
-    const [showViewTypeSelector, setShowViewTypeSelector] = useState(false);
+function Play() {
+    const [spawnMap, setSpawnMap] = useState(firstSpawnMap);
 
-    const newRound = async () => {
-        setRound(undefined);
+    const dispatch = useDispatch();
+    const imgSrc = useSelector(selectImgSrc);
+    const viewHistory = useSelector(selectHistory);
+    const view = useSelector((state: store.RootState) => state.view);
 
-        try {
-            const [currentView, maxZoom] = await generate(spawnMap);
-            setRound({
-                currentView,
-                maxZoom,
-                loadedImages: {},
-                showingCoords: false,
-            });
+    const zoomOut = useCallback(() => dispatch(store.zoomOut()), [dispatch]);
+    const zoomIn = useCallback(() => dispatch(store.zoomIn()), [dispatch]);
+    const setLabels = useCallback((on: boolean) => dispatch(store.setLabels(on)), [dispatch]);
 
-        } catch (e) {
-            console.error(e);
-            // todo: set error state somewhere
-        }
-    };
+    const newRound = useCallback(async () => {
+        dispatch(finishRound());
+        const [currentView, maxZoom] = await generate(spawnMap);
+        dispatch(setNewRound([currentView, maxZoom, spawnMap]));
+    }, [dispatch, spawnMap]);
 
-    const toggleCoordinates = () => {
-        setRound(r => {
-            if (!r) return undefined;
-
-            return update(r, { $toggle: ['showingCoords'] });
-        });
-    };
-
-    const zoomIn = () => {
-        setRound(r => {
-            if (!r) return undefined;
-
-            const step = r.currentView.zoom >= 8 ? 2 : 1;
-            const newZoom = Math.min(r.currentView.zoom + step, r.maxZoom);
-
-            return update(r, { currentView: { zoom: { $set: newZoom } } });
-        });
-    };
-
-    const zoomOut = () => {
-        const minZoom = 2;
-
-        setRound(r => {
-            if (!r) return undefined;
-
-            const step = r.currentView.zoom >= 10 ? 2 : 1;
-            const newZoom = Math.max(r.currentView.zoom - step, minZoom);
-
-            return update(r, { currentView: { zoom: { $set: newZoom } } });
-        });
-    };
-
-    const loadImage = async () => {
-        if (!round) return;
-
-        const view = round.currentView;
-
-        // Has the loading of this entry already started?
-        if (imgUrlDictGet(round.loadedImages, view))
-            return;
-
-        setRound(r => {
-            if (!r) return undefined;
-            return update(r, { loadedImages: { $set: imgUrlDictSet(r.loadedImages, view, {}) } });
-        });
-
-        const url = await fetchView(view, googleConfig);
-
-        setRound(r => {
-            if (!r) return undefined;
-            return update(r, { loadedImages: { $set: imgUrlDictSet(r.loadedImages, view, { url }) } });
-        });
-    };
+    const startReplay = useCallback((idx: number) => {
+        dispatch(finishRound());
+        dispatch(replayRound(idx));
+    }, [dispatch]);
 
     useEffect(() => {
-        loadImage();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [round?.currentView])
-
-    useEffect(() => {
-        // start first round
         newRound();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const [imgSrc,] = useMemo(() => {
-        const current = !!round
-            ? imgUrlDictGet(round.loadedImages, round.currentView)?.url
-            : undefined;
+    const { Text, Title } = Typography;
 
-        if (current) {
-            setLastImage(current);
-            return [current, false];
-        } else {
-            return [lastImage, true];
-        }
-    }, [round, lastImage]);
+    return (
+        <ConfigProvider
+            theme={{
+                "token": {
+                    "colorPrimary": "#611ede",
+                    "colorLink": "#635eff",
+                    "colorLinkHover": "#524fbd",
+                    "borderRadius": 2
+                },
+                "algorithm": theme.darkAlgorithm,
+            }}
+        >
 
-    return <div>
-        <img className="map" src={imgSrc} alt="Satellite Imagery" />
+            <Layout style={{ minHeight: '100vh' }}>
+                <Title id='title'>Geo Zoom Game</Title>
+                <Content>
+                    <div id='content'>
+                        <Text>
+                            You start out zoomed in at a random location, zoom out to see how long
+                            it takes you to figure out where you are.
+                            Select a different map to change the location generator starting from the next round.
+                        </Text><br />
+                        <img src={imgSrc} alt='satellite view' id='satellite-image' width={'100%'} />
+                        <Space direction='vertical' style={{ width: '100%' }}>
+                            <Row gutter={7}>
+                                <Col span={14}>
+                                    <Button type='primary' icon={<ZoomOutOutlined />} onClick={zoomOut} block>
+                                        Zoom Out
+                                    </Button>
+                                </Col>
+                                <Col span={10}>
+                                    <Button icon={<ZoomInOutlined />} onClick={zoomIn} block>
+                                        Zoom In
+                                    </Button>
+                                </Col>
 
-        <br />
+                            </Row>
+                            <Row gutter={7}>
+                                <Col span={14}>
+                                    <Button icon={<ReloadOutlined />} onClick={newRound} block>
+                                        New Round
+                                    </Button>
+                                </Col>
+                                <Col span={4} style={{ textAlign: 'right', paddingRight: 8 }}>
+                                    <Text>Map</Text>
+                                </Col>
+                                <Col span={6}>
+                                    <Select
+                                        defaultValue={firstSpawnMap}
+                                        onChange={setSpawnMap}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <Select.Option value="Urban" title="">Urban</Select.Option>
+                                        <Select.Option value="Random" title="">Random</Select.Option>
+                                        <Select.Option value="Earth View" title="">Earth View</Select.Option>
+                                    </Select>
+                                </Col>
+                            </Row>
+                            <Row gutter={7}>
+                                <Col span={14}>
+                                    <Popover placement='bottom' content={<CoordsPopover view={view} />} trigger={view ? "click" : []}>
+                                        <Button icon={<CompassOutlined />} block>
+                                            Coordinates
+                                        </Button>
+                                    </Popover>
+                                </Col>
+                                <Col span={4} style={{ textAlign: 'right', paddingRight: 8 }}>
+                                    <Text>Labels</Text>
+                                </Col>
+                                <Col span={5}>
+                                    <Switch onChange={setLabels} />
+                                </Col>
+                            </Row>
+                        </Space>
 
-        <div className="zoom-controls" onClick={zoomOut}>
-            <div className="button">
-                <ZoomOutIcon fontSize='large' />
-                <br />
-                <p>Zoom Out</p>
-            </div>
-            <div className="button" onClick={zoomIn}>
-                <ZoomInIcon fontSize='large' />
-                <br />
-                <p>Zoom In</p>
-            </div>
-        </div>
-
-        <div className="controls">
-            <div className="button" style={{ position: "relative" }} onClick={toggleCoordinates}>
-                <RoomIcon fontSize='large' />
-                <br />
-                <p>Coordinates</p>
-            </div>
-            <div className="button" onClick={() => { setShowViewTypeSelector(true) }}>
-                <MapIcon fontSize='large' />
-                <br />
-                <p>View Type</p>
-            </div>
-            <div className="button" onClick={selectNewSpawnMap}>Change Map</div>
-        </div>
-
-        <CoordsDisplay coords={round?.currentView.coords || {lat: 0, lng: 0}} showingCoords={round?.showingCoords || false} setShowingCoords={toggleCoordinates} />
-
-        <br />
-    </div>;
+                        <br />
+                        <br />
+                        <ViewHistory history={viewHistory} startReplay={startReplay} />
+                    </div>
+                </Content>
+                <Footer style={{ textAlign: 'right' }}><a href="https://pascalsommer.ch/">Pascal Sommer</a>, 2022</Footer>
+            </Layout>
+        </ConfigProvider>
+    );
 };
+
+const CoordsPopover = ({ view }: { view?: View }) => {
+    if (!view) return null;
+
+    const { Text, Link } = Typography;
+    return <Space direction='vertical' align='center'>
+        <Text copyable code>{prettyPrint(view.coords)}</Text>
+        <Link href={toGoogleMapsLink(view.coords)}><GoogleOutlined /> Open in Google Maps</Link>
+        <Link href={toGeoHackLink(view.coords)}>Open in GeoHack</Link>
+    </Space>;
+};
+
+type ReplayButtonProps = {
+    onClick: () => void,
+};
+const ReplayButton = ({ onClick }: ReplayButtonProps) => (
+    <Button icon={<ReloadOutlined />} style={{ height: '22px', padding: '0 10px' }} onClick={onClick} type='link'>
+        replay
+    </Button>
+);
+
+type ViewHistoryProps = {
+    history: HistoryItem[],
+    startReplay: (idx: number) => void,
+};
+const ViewHistory = ({ history, startReplay }: ViewHistoryProps) => {
+    const { Text } = Typography;
+    return <Timeline>
+        {history.slice().reverse().map((item, idx) => {
+            const { spawnMap, finishData } = item;
+            const roundIdx = history.length - idx - 1;
+
+            let replay = null;
+            let detail = null;
+            if (finishData) {
+                replay = <ReplayButton onClick={() => startReplay(roundIdx)} />;
+
+                const dist = finishData.viewDiagonal;
+                const distStr = dist.toFixed(dist >= 1000 ? 0 : 2);
+                detail = <Text>&ndash; {distStr}km view</Text>;
+            }
+
+            return <Timeline.Item key={roundIdx}>
+                <Text>Round {roundIdx + 1} {replay}<br /></Text>
+                <Text type='secondary'>{spawnMap}</Text> {detail}
+            </Timeline.Item>;
+        })}
+    </Timeline>
+}
 
 export default Play;
