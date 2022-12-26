@@ -6,9 +6,9 @@ to spend a couple of minutes and to discover various places.
 
 ```bash
 cd frontend
-yarn install
-yarn tsc
-PUBLIC_URL="." yarn build
+npm install
+npx tsc
+npm run build
 cd ..
 
 cd api

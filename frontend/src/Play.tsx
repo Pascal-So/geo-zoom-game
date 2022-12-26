@@ -5,7 +5,7 @@ import { CompassOutlined, GoogleOutlined, ReloadOutlined, ZoomInOutlined, ZoomOu
 import { Content, Footer } from 'antd/es/layout/layout';
 import { prettyPrint, toGeoHackLink, toGoogleMapsLink } from './coords';
 import { useDispatch, useSelector } from 'react-redux';
-import { finishRound, HistoryItem, replayRound, selectHistory, selectImgSrc, setNewRound, View } from './store';
+import { finishRound, HistoryItem, replayRound, selectHistory, selectImgSrc, selectLabelsOn, setNewRound, View } from './store';
 import * as store from './store';
 
 const firstSpawnMap = 'Urban';
@@ -17,10 +17,12 @@ function Play() {
     const imgSrc = useSelector(selectImgSrc);
     const viewHistory = useSelector(selectHistory);
     const view = useSelector((state: store.RootState) => state.view);
+    const labels = useSelector(selectLabelsOn);
 
     const zoomOut = useCallback(() => dispatch(store.zoomOut()), [dispatch]);
     const zoomIn = useCallback(() => dispatch(store.zoomIn()), [dispatch]);
     const setLabels = useCallback((on: boolean) => dispatch(store.setLabels(on)), [dispatch]);
+
 
     const newRound = useCallback(async () => {
         dispatch(finishRound());
@@ -56,8 +58,8 @@ function Play() {
                 <Title id='title'>Geo Zoom Game</Title>
                 <Content>
                     <div id='content'>
-                        <Text>
-                            You start out zoomed in at a random location, zoom out to see how long
+                        <Text style={{ fontSize: '14px' }}>
+                            You are placed in a random location, zoom out to see how long
                             it takes you to figure out where you are.
                             Select a different map to change the location generator starting from the next round.
                         </Text><br />
@@ -83,7 +85,7 @@ function Play() {
                                     </Button>
                                 </Col>
                                 <Col span={4} style={{ textAlign: 'right', paddingRight: 8 }}>
-                                    <Text>Map</Text>
+                                    <Text style={{ fontSize: '13px' }}>Map</Text>
                                 </Col>
                                 <Col span={6}>
                                     <Select
@@ -106,10 +108,10 @@ function Play() {
                                     </Popover>
                                 </Col>
                                 <Col span={4} style={{ textAlign: 'right', paddingRight: 8 }}>
-                                    <Text>Labels</Text>
+                                    <Text style={{ fontSize: '13px' }}>Labels</Text>
                                 </Col>
                                 <Col span={5}>
-                                    <Switch onChange={setLabels} />
+                                    <Switch onChange={setLabels} checked={labels} />
                                 </Col>
                             </Row>
                         </Space>

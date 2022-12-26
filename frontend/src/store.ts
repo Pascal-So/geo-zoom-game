@@ -122,3 +122,4 @@ export const selectImgSrc = createSelector((state: RootState) => state.view, vie
 });
 
 export const selectHistory = (state: RootState) => state.viewHistory;
+export const selectLabelsOn = (state: RootState) => state.view ? state.view.type === ViewType.Hybrid : false;
