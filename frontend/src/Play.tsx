@@ -66,12 +66,12 @@ function Play() {
                         <img src={imgSrc} alt='satellite view' id='satellite-image' width={'100%'} />
                         <Space direction='vertical' style={{ width: '100%' }}>
                             <Row gutter={7}>
-                                <Col span={14}>
+                                <Col span={12}>
                                     <Button type='primary' icon={<ZoomOutOutlined />} onClick={zoomOut} block>
                                         Zoom Out
                                     </Button>
                                 </Col>
-                                <Col span={10}>
+                                <Col span={12}>
                                     <Button icon={<ZoomInOutlined />} onClick={zoomIn} block>
                                         Zoom In
                                     </Button>
@@ -79,7 +79,7 @@ function Play() {
 
                             </Row>
                             <Row gutter={7}>
-                                <Col span={14}>
+                                <Col span={12}>
                                     <Button icon={<ReloadOutlined />} onClick={newRound} block>
                                         New Round
                                     </Button>
@@ -87,7 +87,7 @@ function Play() {
                                 <Col span={4} style={{ textAlign: 'right', paddingRight: 8 }}>
                                     <Text style={{ fontSize: '13px' }}>Map</Text>
                                 </Col>
-                                <Col span={6}>
+                                <Col span={8}>
                                     <Select
                                         defaultValue={firstSpawnMap}
                                         onChange={setSpawnMap}
@@ -100,7 +100,7 @@ function Play() {
                                 </Col>
                             </Row>
                             <Row gutter={7}>
-                                <Col span={14}>
+                                <Col span={12}>
                                     <Popover placement='bottom' content={<CoordsPopover view={view} />} trigger={view ? "click" : []}>
                                         <Button icon={<CompassOutlined />} block>
                                             Coordinates
@@ -110,7 +110,7 @@ function Play() {
                                 <Col span={4} style={{ textAlign: 'right', paddingRight: 8 }}>
                                     <Text style={{ fontSize: '13px' }}>Labels</Text>
                                 </Col>
-                                <Col span={5}>
+                                <Col span={8}>
                                     <Switch onChange={setLabels} checked={labels} />
                                 </Col>
                             </Row>
