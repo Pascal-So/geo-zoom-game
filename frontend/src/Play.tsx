@@ -96,6 +96,10 @@ function Play() {
                                         <Select.Option value="Urban" title="">Urban</Select.Option>
                                         <Select.Option value="Random" title="">Random</Select.Option>
                                         <Select.Option value="Earth View" title="">Earth View</Select.Option>
+                                        <Select.Option value="Airports" title="">Airports</Select.Option>
+                                        <Select.Option value="Rivers" title="">Rivers</Select.Option>
+                                        <Select.Option value="Coast" title="">Coast</Select.Option>
+                                        <Select.Option value="Railroads" title="">Railroads</Select.Option>
                                     </Select>
                                 </Col>
                             </Row>
@@ -121,7 +125,7 @@ function Play() {
                         <ViewHistory history={viewHistory} startReplay={startReplay} />
                     </div>
                 </Content>
-                <Footer style={{ textAlign: 'right' }}><a href="https://pascalsommer.ch/">Pascal Sommer</a>, 2022</Footer>
+                <Footer style={{ textAlign: 'right' }}><a href="https://pascalsommer.ch/">Pascal Sommer</a>, 2016-2022</Footer>
             </Layout>
         </ConfigProvider>
     );

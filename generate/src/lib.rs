@@ -1,119 +1,107 @@
-use gdal::LayerOptions;
-use rand::distributions::{Distribution, WeightedIndex};
-use std::path::Path;
+#![feature(type_alias_impl_trait)]
 
-pub fn rasterfile_to_shapefile<T, F, P>(
-    mut weight_function: F,
-    in_path: P,
-    out_path: &str,
-    nr_samples: usize,
-) where
-    T: Copy + gdal::raster::GdalType,
-    F: FnMut(T, &(usize, usize), &gdal::GeoTransform) -> f64,
-    P: AsRef<Path>,
-{
-    let in_dataset = gdal::Dataset::open(in_path.as_ref()).unwrap();
-    let raster = in_dataset.rasterband(1).unwrap();
-    let transform = in_dataset.geo_transform().unwrap();
+pub mod reservoir;
 
-    let fun = |c: T, pos: &(usize, usize)| -> f64 { weight_function(c, pos, &transform) };
-    let samples = sample_on_raster(&raster, fun, nr_samples);
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    path::Path,
+};
 
-    let mut out_dataset = gdal::Driver::get("ESRI Shapefile")
+use gdal::{
+    spatial_ref::SpatialRef,
+    vector::{Geometry, LayerAccess, OGRwkbGeometryType},
+    LayerOptions,
+};
+
+/// Generate a Shapefile containing one layer in WGS84 with the provided points.
+pub fn create_points_shapefile(
+    out_path: impl AsRef<Path>,
+    points: impl IntoIterator<Item = (f64, f64)>,
+) {
+    let mut out_dataset = gdal::DriverManager::get_driver_by_name("ESRI Shapefile")
         .unwrap()
         .create_vector_only(out_path)
         .unwrap();
 
-    let spatial_ref = in_dataset.spatial_ref().unwrap();
     let geometry_type = gdal::vector::OGRwkbGeometryType::wkbPoint;
 
     let mut layer = out_dataset
         .create_layer(LayerOptions {
-            srs: Some(&spatial_ref),
+            srs: Some(&SpatialRef::from_epsg(4326).unwrap()),
             ty: geometry_type,
             ..Default::default()
         })
         .unwrap();
 
-    for sample in &samples {
+    for p in points {
         let mut geometry = gdal::vector::Geometry::empty(geometry_type).unwrap();
-        geometry.add_point_2d(index_to_coord(sample, &transform));
+        geometry.add_point_2d(p);
         layer.create_feature(geometry).unwrap();
     }
 }
 
-pub fn index_to_coord((x, y): &(usize, usize), transform: &gdal::GeoTransform) -> (f64, f64) {
-    let fx = *x as f64 + 0.5;
-    let fy = *y as f64 + 0.5;
+/// Takes a dataset with one layer in WGS 84 containing line strings and
+/// returns at most one coordinate per bucket from the line strings.
+pub fn from_line_strings_bucketed(
+    data: gdal::Dataset,
+    res: (f64, f64),
+) -> impl IntoIterator<Item = (f64, f64)> {
+    let lc = data.layer_count();
+    assert_eq!(
+        lc, 1,
+        "Expected the data to contain 1 layer but it contains {}.",
+        lc
+    );
 
-    (
-        transform[0] + fx * transform[1] + fy * transform[2],
-        transform[3] + fx * transform[4] + fy * transform[5],
-    )
+    let mut layer = data.layer(0).unwrap();
+    assert_eq!(
+        layer.spatial_ref().unwrap().name().unwrap(),
+        "WGS 84".to_string()
+    );
+
+    let mut coords = HashMap::new();
+    for (i, f) in layer.features().enumerate() {
+        assert!(
+            f.geometry_by_index(1).is_err(),
+            "Feature {i} has more than one geometry!"
+        );
+
+        let mut insert_points = |geo: &Geometry| {
+            for (x, y, _) in geo.get_point_vec() {
+                let bucket = lambert_bucket(res, (x, y));
+                match coords.entry(bucket) {
+                    Entry::Occupied(_) => {}
+                    Entry::Vacant(entry) => {
+                        entry.insert((x, y));
+                    }
+                };
+                coords.insert(bucket, (x, y));
+            }
+        };
+
+        match f.geometry().geometry_type() {
+            OGRwkbGeometryType::wkbLineString => insert_points(f.geometry()),
+            OGRwkbGeometryType::wkbMultiLineString => {
+                for i in 0..f.geometry().geometry_count() {
+                    insert_points(&f.geometry().get_geometry(i));
+                }
+            }
+            _ => panic!(
+                "Feature {i}: Expected linestring geometry, found {}.",
+                f.geometry().geometry_type()
+            ),
+        };
+    }
+    coords.into_values()
 }
 
-pub fn sample_on_raster<T, F>(
-    raster_band: &gdal::raster::RasterBand,
-    mut weight_function: F,
-    nr_samples: usize,
-) -> Vec<(usize, usize)>
-where
-    T: Copy + gdal::raster::GdalType,
-    F: FnMut(T, &(usize, usize)) -> f64,
-{
-    assert_eq!(raster_band.band_type(), T::gdal_type());
-
-    let (width, height) = raster_band.size();
-
-    let mut buffer: Vec<T> = Vec::with_capacity(width);
-
-    // Safety: read_into_slice writes to all entries before we read from buffer.
-    unsafe {
-        buffer.set_len(width);
-    };
-
-    let mut weight_per_row: Vec<f64> = Vec::with_capacity(height);
-
-    for y in 0..height {
-        if y % 100 == 0 {
-            println!("{}", y);
-        }
-
-        weight_per_row.push(0.0);
-
-        raster_band
-            .read_into_slice((0, y as isize), (width, 1), (width, 1), &mut buffer, None)
-            .unwrap();
-        for (x, &entry) in buffer.iter().enumerate() {
-            let weight = weight_function(entry, &(x, y));
-            weight_per_row[y] += weight;
-        }
-    }
-
-    let dist = WeightedIndex::new(&weight_per_row).unwrap();
-
-    let mut weights: Vec<f64> = vec![0.; width];
-    let mut out: Vec<(usize, usize)> = Vec::with_capacity(nr_samples);
-
-    let mut rng = rand::thread_rng();
-    for sample in 0..nr_samples {
-        if sample % 100 == 0 {
-            println!("sample: {}", sample);
-        }
-
-        let y = dist.sample(&mut rng);
-
-        raster_band
-            .read_into_slice((0, y as isize), (width, 1), (width, 1), &mut buffer, None)
-            .unwrap();
-
-        for (x, &entry) in buffer.iter().enumerate() {
-            weights[x] = weight_function(entry, &(x, y));
-        }
-
-        let x = WeightedIndex::new(&weights).unwrap().sample(&mut rng);
-        out.push((x, y));
-    }
-
-    out
+/// To avoid excessive differences in point density, we bucket the generated points
+/// by equal area buckets using a regular grid on the lambert projection (or
+/// equivalently, any other cylindrical equal-aera projection).
+fn lambert_bucket(res: (f64, f64), (x, y): (f64, f64)) -> (usize, usize) {
+    let fac_x = res.0 / 360.;
+    let fac_y = res.1 / 180.;
+    let x = (x + 180.) * fac_x;
+    let y = (y + 90.) * fac_y;
+    (x as usize, y as usize)
 }
