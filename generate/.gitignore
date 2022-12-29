@@ -1,8 +1,2 @@
 /target
 *.tif
-
-# generated output
-*shp
-*shx
-*dbf
-*prj
