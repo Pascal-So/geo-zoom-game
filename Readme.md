@@ -4,23 +4,10 @@ Zoom out until you recognize the location. I didn't add a scoring system to the
 game because I don't want this to be competitive, it should just be a fun thing
 to spend a couple of minutes and to discover various places.
 
+![screenshot of the game](screenshot.png)
+
+To build the game and upload it to a server, run
+
 ```bash
-cd frontend
-npm install
-npx tsc
-npm run build
-cd ..
-
-cd api
-composer install
-cd ..
-
-cd generate
-cargo run --release
-cd ..
-
-cp generate/*.{shp,shx,dbf,prj} api/data/
+./deploy.sh server:base/path
 ```
-
-Now copy the contents of `frontend/build/` along with the entire `api/` dir to
-the server's public dir.
