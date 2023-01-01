@@ -125,7 +125,10 @@ function Play() {
                         <ViewHistory history={viewHistory} startReplay={startReplay} />
                     </div>
                 </Content>
-                <Footer style={{ textAlign: 'right' }}><a href="https://pascalsommer.ch/">Pascal Sommer</a>, 2016-2022</Footer>
+                <Footer style={{ textAlign: 'right' }}>
+                    <a href="https://pascalsommer.ch/">Pascal Sommer</a>, 2016-2023<br/>
+                    source code available on <a href="https://github.com/Pascal-So/geo-zoom-game">GitHub</a>
+                </Footer>
             </Layout>
         </ConfigProvider>
     );
